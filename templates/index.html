@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spot The Fake Photo - Live Demo</title>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #08090c;
+            --panel-bg: rgba(18, 22, 33, 0.65);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --glow-green: rgba(0, 230, 118, 0.45);
+            --glow-red: rgba(255, 23, 68, 0.45);
+            --text-primary: #f8f9fa;
+            --text-secondary: #90a4ae;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            background-image: linear-gradient(rgba(8, 9, 12, 0.88), rgba(8, 9, 12, 0.88)), url('/background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            gap: 28px;
+            max-width: 960px;
+            width: 100%;
+            padding: 30px;
+            background: rgba(12, 15, 23, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 28px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Glassmorphic Panel Layout */
+        .glass-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        /* Video Container Panel */
+        .video-panel {
+            flex: 1.2;
+            min-width: 300px;
+            max-width: 480px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 4/3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 19px;
+        }
+
+        /* Camera Scanner Scanning line */
+        .scanner-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent);
+            box-shadow: 0 0 10px 1px rgba(255, 255, 255, 0.2);
+            animation: scan 4s linear infinite;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes scan {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+
+        /* Sidebar Control HUD Card */
+        .hud-panel {
+            flex: 0.8;
+            min-width: 280px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 28px;
+        }
+
+        .project-info h1 {
+            font-weight: 800;
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff 40%, #90a4ae 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .project-info p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 4px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        .section-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .status-container {
+            text-align: center;
+            padding: 20px 12px;
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .prediction-badge {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+            text-shadow: 0 0 12px currentColor;
+            font-family: 'Outfit', sans-serif;
+            transition: color 0.3s ease;
+        }
+
+        /* Dynamic states managed by JS */
+        .state-real {
+            color: var(--accent-green);
+            box-shadow: inset 0 0 15px rgba(0, 230, 118, 0.05), 0 4px 15px var(--glow-green);
+            border-color: rgba(0, 230, 118, 0.15) !important;
+        }
+
+        .state-screen {
+            color: var(--accent-red);
+            box-shadow: inset 0 0 15px rgba(255, 23, 68, 0.05), 0 4px 15px var(--glow-red);
+            border-color: rgba(255, 23, 68, 0.15) !important;
+        }
+
+        /* Meter Progress Styling */
+        .metric-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .score-value {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+
+        .progress-track {
+            height: 8px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 50%;
+            border-radius: 4px;
+            transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+        }
+
+        .progress-bar-real {
+            background-color: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
+        }
+
+        .progress-bar-screen {
+            background-color: var(--accent-red);
+            box-shadow: 0 0 8px var(--accent-red);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+                padding: 20px;
+            }
+            .video-panel, .hud-panel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Webcam Panel -->
+        <div class="glass-panel video-panel">
+            <div class="scanner-line"></div>
+            <img class="video-feed" src="/video_feed" alt="Live Webcam Feed">
+        </div>
+
+        <!-- HUD controls & info -->
+        <div class="hud-panel">
+            <!-- Project Identification -->
+            <div class="project-info">
+                <h1>Spot The Fake Photo</h1>
+                <p>Real-time screen recapture detector</p>
+            </div>
+
+            <!-- Detection Status Card -->
+            <div>
+                <div class="section-title">Analysis Status</div>
+                <div id="status-card" class="status-container state-real">
+                    <span id="prediction-text" class="prediction-badge">REAL PHOTO</span>
+                </div>
+            </div>
+
+            <!-- Score & Meter Card -->
+            <div class="metric-container">
+                <div class="score-row">
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">Recapture Confidence</span>
+                    <span id="score-text" class="score-value">0.0000</span>
+                </div>
+                <div class="progress-track">
+                    <div id="progress-indicator" class="progress-bar progress-bar-real"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Async querying script -->
+    <script>
+        const statusCard = document.getElementById('status-card');
+        const predictionText = document.getElementById('prediction-text');
+        const scoreText = document.getElementById('score-text');
+        const progressIndicator = document.getElementById('progress-indicator');
+
+        function updatePrediction() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    const prob = data.probability;
+                    const pred = data.prediction;
+
+                    // Update textual score
+                    scoreText.textContent = prob.toFixed(4);
+                    
+                    // Update progress meter width
+                    const percent = (prob * 100).toFixed(1);
+                    progressIndicator.style.width = percent + '%';
+
+                    if (pred === "REAL") {
+                        predictionText.textContent = "REAL PHOTO";
+                        statusCard.className = "status-container state-real";
+                        progressIndicator.className = "progress-bar progress-bar-real";
+                    } else {
+                        predictionText.textContent = "PHOTO OF A SCREEN";
+                        statusCard.className = "status-container state-screen";
+                        progressIndicator.className = "progress-bar progress-bar-screen";
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching prediction status:', err);
+                });
+        }
+
+        // Poll the server status every 200ms
+        setInterval(updatePrediction, 200);
+    </script>
+</body>
+</html>

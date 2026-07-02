@@ -1,0 +1,9 @@
+.DS_Store
+Dataset/
+__pycache__/
+*.pyc
+.system_generated/
+tasks/
+walkthrough.md
+task.md
+implementation_plan.md
